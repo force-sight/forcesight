@@ -1,0 +1,46 @@
+TRAIN_FOLDER: [data/grip_force/train]
+TEST_FOLDER: [data/grip_force/test]
+
+MODEL_DIR: checkpoints
+
+ROBOT_STATES: [x, y, z, roll, pitch, yaw, gripper, gripper_effort]
+
+LEARNING_RATE: 0.001
+BATCH_SIZE: 4
+NUM_WORKERS: 12
+NUM_EPOCHS: 100
+
+TRANSFORM: []
+
+LOSS_RATIO: 5.6
+
+ACTION_DELTA_DICT: {x: 0.02, y: 0.02, z: 0.005, roll: 0.1, pitch: 0.1, yaw: 0.05, gripper: 5, theta: 0.1}
+
+IMAGE_MODEL: None # vit-tiny, vit-small, vit-base, vit-large, clip-base, clip-large, dinov2-small, dinov2-base, dinov2-large
+# FREEZE_IMAGE_MODEL: False
+IMAGE_SIZE: 224
+# USE_PATCH_FEATURES: False
+
+# TEXT_MODEL: None # t5-small, t5-base, t5-large, bert, clip-base, clip-large
+# FREEZE_TEXT_MODEL: True
+
+# MULTIMODAL_HEAD: classifier-free-guidance # vision-only-linear, vision-only-mlp, concat-linear-attn-mlp, concat-linear, concat-mlp
+# CFG_COND_METHOD: xattn
+
+# Losses
+# FINGERTIP_LOSS: L1
+# FORCE_LOSS: L2
+# PITCH_LOSS: L2
+
+# Loss weights
+# LAMBDA_FINGERTIPS: 1.0
+# LAMBDA_FORCE: 0.01 # 0.025
+# LAMBDA_PITCH: 0.0 # 1.0
+
+# USE_RGBD: True
+# PRETRAINED: True
+
+CLASSIFY_TIMESTEP: False
+# CLASSIFICATION_LOSS: focal
+# ALPHA: 1 # for focal loss
+NUM_TIMESTEPS: 1

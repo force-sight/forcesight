@@ -1,0 +1,2 @@
+python -m prediction.trainer --bipartite 1 --config final_tests_vit_small_ablation_6_7 --pretrained_model_path checkpoints/final_tests_vit_small_ablation_6_7_0/model_latest.pth --evaluate --eval_folder data/multiprompt/test_new_objects_and_env
+python -m prediction.trainer --bipartite 1 --config final_tests_vit_base_ablation_6_7 --pretrained_model_path checkpoints/final_tests_vit_base_ablation_6_7_0/model_latest.pth --evaluate --eval_folder data/multiprompt/test_new_objects_and_env

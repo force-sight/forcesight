@@ -1,0 +1,32 @@
+<launch>
+  <arg name="model" default="$(find sws_description)/urdf/sws.urdf"/>
+  <!-- <arg name="model" default="$(find stretch_description)/urdf/stretch.urdf"/> -->
+  <arg name="joints_pub" default="true" />
+  <arg name="gui" default="true" />
+  <arg name="odom_to_baselink" default="true" />
+
+  <param name="robot_description" command="$(find xacro)/scripts/xacro $(arg model)" />
+  <arg name="rvizconfig" default="$(find sws_description)/launch/urdf_viewer.rviz" />
+
+  <node if="$(arg joints_pub)" name="joint_state_publisher"
+    pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"
+  />
+
+  <node if="$(arg joints_pub)"
+        pkg="tf" type="static_transform_publisher"
+        name="static_odom_baselink_broadcaster" 
+        args="-0.35 0 0 0 0 0 1 odom base_link 20" />
+
+  <node unless="$(arg gui)" name="joint_state_publisher"
+    pkg="joint_state_publisher" type="joint_state_publisher"
+  />
+
+  <node name="robot_state_publisher"
+    pkg="robot_state_publisher" type="robot_state_publisher"
+  />
+
+  <node
+    name="rviz" pkg="rviz" type="rviz"
+    args="-d $(arg rvizconfig)" required="true"
+  />
+</launch>

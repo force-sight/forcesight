@@ -1,0 +1,65 @@
+TRAIN_FOLDER: [data/multiprompt/train]
+TEST_FOLDER: [data/multiprompt/test]
+
+MODEL_DIR: checkpoints
+
+ROBOT_STATES: [x, y, z, roll, pitch, yaw]
+
+LEARNING_RATE: 0.00005
+BATCH_SIZE: 8
+NUM_WORKERS: 12
+NUM_EPOCHS: 5
+
+TRANSFORM: [jitter]
+
+LOSS_RATIO: 5.6
+
+ACTION_DELTA_DICT: {x: 0.03, y: 0.03, z: 0.03, roll: 0.1, pitch: 0.1, yaw: 0.05, gripper: 5, theta: 0.1}
+
+IMAGE_MODEL: vit-large # vit-tiny, vit-small, vit-base, vit-large, clip-base, clip-large, dinov2-small, dinov2-base, dinov2-large
+FREEZE_IMAGE_MODEL: False
+IMAGE_SIZE: 224
+USE_PATCH_FEATURES: False
+
+TEXT_MODEL: t5-large # t5-small, t5-base, t5-large, bert, clip-base, clip-large
+FREEZE_TEXT_MODEL: True
+
+MULTIMODAL_HEAD: classifier-free-guidance # vision-only-linear, vision-only-mlp, concat-linear-attn-mlp, concat-linear, concat-mlp
+CFG_COND_METHOD: xattn
+
+# Loss functions
+FINGERTIP_LOSS: L1
+FORCE_LOSS: L2
+PITCH_LOSS: L2
+GRIP_LOSS: L2
+WIDTH_LOSS: L2
+YAW_LOSS: L2
+
+# Loss weights
+LAMBDA_FINGERTIPS: 0.0
+LAMBDA_FORCE: 0.2 # 0.025
+LAMBDA_PITCH: 0.0 # 1.0
+LAMBDA_GRIP: 0.2
+LAMBDA_TIMESTEP: 0.1
+LAMBDA_PIXEL: 1
+LAMBDA_DEPTH: 50000
+LAMBDA_WIDTH: 0.2
+LAMBDA_YAW: 0.2
+
+USE_RGBD: True
+PRETRAINED: True
+
+CLASSIFY_TIMESTEP: True # predict current timestep
+CLASSIFICATION_LOSS: focal
+ALPHA: 1 # for focal loss
+NUM_TIMESTEPS: 4
+
+# new representation
+CLS_POINT_RADIUS: 10
+PIXEL_SPACE_OUTPUT: True
+PIXEL_SPACE_CENTROID: True
+PIXEL_LABEL_WEIGHT: 100 # how much we care about 1s over 0s in pixel space
+
+REMOVE_NON_VIEWABLE_TARGET: 1 # removes when all 1 point of target contacts is not viewable
+
+SUBGOAL_TEXT: named_action
