@@ -1,6 +1,6 @@
 # ForceSight
 
-This is the repository for the ForceSight project. The project aims to use multimodal learning to predict the force and kinematic goals for the robot to perform a task. The project site is https://force-sight.github.io/. Paper is available at [arxiv](https://arxiv.org/abs/2309.12312).
+Given an RGBD image and a text prompt, ForceSight produces visual-force goals for a robot, enabling mobile manipulation in unseen environments with unseen object instances. The project site is https://force-sight.github.io/. Our paper is available at [arxiv](https://arxiv.org/abs/2309.12312).
 
 ![architecture](assets/model-archi.gif)
 
@@ -9,16 +9,25 @@ This is the repository for the ForceSight project. The project aims to use multi
 ```bash
 # first create a conda environment
 conda env update --file environment.yml
-pip3 install transformations kinpy open3d timm pyrealsense2 transformers wandb classifier_free_guidance_pytorch opencv-contrib-python==4.6.0.66 scikit-image sentencepiece==0.1.91 git+https://github.com/openai/CLIP.git
+pip3 install transformations kinpy open3d timm pyrealsense2 transformers wandb classifier_free_guidance_pytorch opencv-contrib-python==4.6.0.66 scikit-image sentencepiece git+https://github.com/openai/CLIP.git
 ```
 
-- Also requires installation of classifier-free-guidance-pytorch: https://github.com/jeremy-collins/classifier-free-guidance-pytorch.git
+- Also requires installation of classifier-free-guidance-pytorch:
+
+```bash
+git clone https://github.com/jeremy-collins/classifier-free-guidance-pytorch.git
+cd classifier-free-guidance-pytorch
+pip install -e .
+git clone https://github.com/Healthcare-Robotics/stretch_remote.git
+cd stretch_remote
+pip install -e .
+```
 
 ## Quick Start
 
-TODO: This is a quick start guide for the project. Robot is not required for this part.
+TODO: This is a quick start guide for the project. The robot is not required for this part.
 
-1. **Download dataset, link: TODO**
+1. Download the dataset, model, and hardware [here](https://1drv.ms/f/s!AjebifpxoPl5hO5bu91QCJSDizws9g?e=h9AlnZ). Place the model in `checkpoints/forcesight_0/` and place the dataset in `data/`.
    
 2. **Train a model**
     ```bash
@@ -34,7 +43,7 @@ TODO: This is a quick start guide for the project. Robot is not required for thi
     # --ignore_prefilter is used to ignore the prefiltering step, for faster init
     ```
 
-**Or use pretrained checkpoint: [here](https://drive.google.com/drive/folders/1IQZlcGWilMK3-DVNy6bvp3XUBsZanfzl?usp=sharing). and placed it in `default_config/model_best.pth`
+**Or use pre-trained checkpoint: [here](https://drive.google.com/drive/folders/1IQZlcGWilMK3-DVNy6bvp3XUBsZanfzl?usp=sharing). and placed it in `default_config/model_best.pth`
 
 ---
 
@@ -114,8 +123,8 @@ LAMBDA_FINGERTIPS # weight for fingertip loss
 LAMBDA_FORCE # weight for force loss
 LAMBDA_PITCH # weight for pitch loss
 USE_RGBD # use rgbd data instead of rgb
-PRETRAINED # use pretrained model
-PIXEL_SPACE_OUTPUT # use pixel space as output represenatation
+PRETRAINED # use pre-trained model
+PIXEL_SPACE_OUTPUT # use pixel space as output representation
 PIXEL_SPACE_CENTROID # use pixel space centroid
 ```
 **For more details, please refer to the config files in `configs/` directory.**
@@ -137,20 +146,19 @@ Since grip force measurement is not available from the robot, we would train a g
 
 `python -m prediction.grip_force_trainer --config grip_force_dist_pos_effort_5_25 --bipartite 0`
 
-## Run the model on an actual robot
+## Running ForceSight on a real robot
 
-After finishing the training, we can run the model on the robot. We will use `ForceSight` to generate kinematic and force goals for the robot, and the low level controller will then control the robot to reach the goals.
+After training, we can run the model on the robot. We will use `ForceSight` to generate kinematic and force goals for the robot, and the low-level controller will then control the robot to reach the goals.
 
 To run the robot, we will need to run the `robot_server.py` on the robot, and then run the `visual_servo.py`. The `visual_servo.py` can be run on a different computer with a GPU, and the communication is specified by the `--ip` argument.
 
-With centroid method
 ```bash
 python3 -m robot.visual_servo --config default_config --index 6 --epoch latest --prompt "place the object in the hand" --ip 192.168.0.230
 ```
 
-Test model in with live view and visual servoing
+Test model with live view and visual servoing
 ```bash
-# Visual Servo: Click on the P to insert prompt,
+# Visual Servo: Press P to insert prompt,
 # hit key 'T' to switch between view model and visual servoing mode
 # Configs: --ip 100.124.244.50 --use_ft 0
 python3 -m robot.visual_servo --config default_config --index 1 --epoch best --prompt "pick up the mouse" --ip <ROBOTIP>
