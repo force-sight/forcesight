@@ -38,12 +38,10 @@ TODO: This is a quick start guide for the project. The robot is not required for
     ```bash
     python3 -m prediction.view_preds \
         --config default_config \
-        --folder data/multiprompt_5_27/1-2/gray_box \
+        --folder data/test/1-2/top_drawer1 \
         --index 0 --epoch best --ignore_prefilter
     # --ignore_prefilter is used to ignore the prefiltering step, for faster init
     ```
-
-**Or use pre-trained checkpoint: [here](https://drive.google.com/drive/folders/1IQZlcGWilMK3-DVNy6bvp3XUBsZanfzl?usp=sharing). and placed it in `default_config/model_best.pth`
 
 ---
 
