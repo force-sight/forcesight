@@ -52,6 +52,7 @@ def parse_config_args():
     parser.add_argument('--save_every_epoch', action='store_true', help='save a checkpoint every epoch')
     parser.add_argument('--binary_grip', action='store_true', help='binary gripper state')
     parser.add_argument('--ablate_force', action='store_true', help='dont use force goals')
+    parser.add_argument('--ignore_robot', action='store_true', help='dont connect to the robot')
 
     args = parser.parse_args()
     return load_config(args.config), args

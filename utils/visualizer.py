@@ -245,6 +245,7 @@ def visualize_datapoint(
         pred_grip_force =  t2float(pred['grip_force'])
         print('pred final force: ', pred_force)
 
+        _has_fingertips_pred = True
         if hasattr(config, 'PIXEL_SPACE_OUTPUT') and config.PIXEL_SPACE_OUTPUT:
 
             cls_img_pred, reg_img_pred = recover_pixel_space_represention(config, pred['cls_img'], pred['reg_img'])
@@ -256,8 +257,7 @@ def visualize_datapoint(
                 centroid_pred = pixel_space_to_centroid(
                     config, cls_img_pred, reg_img_pred, method="local_max", threshold=0.002)
                 if centroid_pred is None:
-                    left_fingertip_pred = None
-                    right_fingertip_pred = None
+                    _has_fingertips_pred = False
                 else:
                     if hasattr(config, 'LAMBDA_YAW') and config.LAMBDA_YAW:
                         left_fingertip_pred, right_fingertip_pred = centroid_to_fingertips(centroid_pred, t2float(pred['width']), t2float(pred['yaw']))
@@ -267,44 +267,41 @@ def visualize_datapoint(
                 # classic pixel space representation for fingertips
                 left_fingertip_pred, right_fingertip_pred = pixel_space_to_contacts(
                     config, cls_img_pred, reg_img_pred, method='local_max')
-                # print("Not detecting anything!!")
-                left_fingertip_pred = None
-                right_fingertip_pred = None
 
-            # left_fingertip_pred, right_fingertip_pred = pixel_space_to_contacts(
-            #     config, cls_img_pred, reg_img_pred, method='local_max')
-            ft_origin = (left_fingertip_pred + right_fingertip_pred) /2
-            # projecting the predicted fingertip positions onto cls_img_pred
-            # NOTE: we kinda keep the normalization factor constant so we can compare what is actually being detected
-            cls_img_pred_normalized = 1 - (cls_img_pred - np.min(cls_img_pred)) / 0.025 # (np.max(cls_img_pred) - np.min(cls_img_pred))
-            cls_img_pred_rgb = cv2.applyColorMap((cls_img_pred_normalized*255).astype(np.uint8), cv2.COLORMAP_JET)
+            # NOTE: When we are not detecting anything, we don't want to draw anything
+            if _has_fingertips_pred:
+                ft_origin = (left_fingertip_pred + right_fingertip_pred) /2
+                # projecting the predicted fingertip positions onto cls_img_pred
+                # NOTE: we kinda keep the normalization factor constant so we can compare what is actually being detected
+                cls_img_pred_normalized = 1 - (cls_img_pred - np.min(cls_img_pred)) / 0.025 # (np.max(cls_img_pred) - np.min(cls_img_pred))
+                cls_img_pred_rgb = cv2.applyColorMap((cls_img_pred_normalized*255).astype(np.uint8), cv2.COLORMAP_JET)
 
-            # creating an image that mixes the predicted fingertip positions with the ground truth
-            pred_overlay = cv2.addWeighted(cls_img_pred_rgb, 0.5, (initial_rgb*255).astype(np.uint8), 0.5, 0)
-            pred_overlay = visualize_points(pred_overlay.copy(), [left_fingertip_pred, right_fingertip_pred],
-                                            colors=[(255, 0, 255), (255, 0, 255)]) # both are purple
-            print("drawing forces", left_fingertip_pred)
-            pred_overlay = visualize_forces(pred_overlay, pred_force, ft_origin)
-            pred_overlay = visualize_grip_force(pred_overlay, pred_grip_force, [left_fingertip_pred, right_fingertip_pred])
-            axs[0, 2].imshow(pred_overlay)
-            axs[1, 2].imshow(reg_img_pred, cmap='gray')
-            axs[0, 2].set_title('pixel heatmap prediction')
-            axs[1, 2].set_title('depth prediction')
+                # creating an image that mixes the predicted fingertip positions with the ground truth
+                pred_overlay = cv2.addWeighted(cls_img_pred_rgb, 0.5, (initial_rgb*255).astype(np.uint8), 0.5, 0)
+                pred_overlay = visualize_points(pred_overlay.copy(), [left_fingertip_pred, right_fingertip_pred],
+                                                colors=[(255, 0, 255), (255, 0, 255)]) # both are purple
+                print("drawing forces", left_fingertip_pred)
+                pred_overlay = visualize_forces(pred_overlay, pred_force, ft_origin)
+                pred_overlay = visualize_grip_force(pred_overlay, pred_grip_force, [left_fingertip_pred, right_fingertip_pred])
+                axs[0, 2].imshow(pred_overlay)
+                axs[1, 2].imshow(reg_img_pred, cmap='gray')
+                axs[0, 2].set_title('pixel heatmap prediction')
+                axs[1, 2].set_title('depth prediction')
 
-            # computing the error
-            left_error = 0.0
-            right_error = 0.0
-            if left_fingertip_pred is not None:
-                left_error = np.linalg.norm(left_fingertip_pred - finger_tips_gt[0])
-            else:
-                print("left_fingertip_pred is None")
-            if right_fingertip_pred is not None:
-                right_error = np.linalg.norm(right_fingertip_pred - finger_tips_gt[1])
-            else:
-                print("right_fingertip_pred is None")
+                # computing the error
+                left_error = 0.0
+                right_error = 0.0
+                if left_fingertip_pred is not None:
+                    left_error = np.linalg.norm(left_fingertip_pred - finger_tips_gt[0])
+                else:
+                    print("left_fingertip_pred is None")
+                if right_fingertip_pred is not None:
+                    right_error = np.linalg.norm(right_fingertip_pred - finger_tips_gt[1])
+                else:
+                    print("right_fingertip_pred is None")
 
-            # adding the error to the title
-            axs[0, 2].set_title('prediction (left error: {:.4f} cm, right error: {:.4f} cm)'.format(left_error * 100, right_error * 100))
+                # adding the error to the title
+                axs[0, 2].set_title('prediction (left error: {:.4f} cm, right error: {:.4f} cm)'.format(left_error * 100, right_error * 100))
 
         else:
             # add a column to the figure for the prediction
@@ -326,7 +323,7 @@ def visualize_datapoint(
         pred_force = t2np(pred['force'])
         pred_grip_force = t2np(pred['grip_force'])
         
-        if viz_3d is not None and left_fingertip_pred is not None and right_fingertip_pred is not None:
+        if viz_3d is not None and _has_fingertips_pred:
             final_ft_cam_vec = pred_force@ft_to_cam_rotation()
             centroid = (left_fingertip_pred + right_fingertip_pred) / 2
             viz_3d.publish_wrist_force(final_ft_cam_vec, centroid, is_curr=False)
@@ -435,9 +432,6 @@ def filled_arrowedLine(img, pt1, pt2, color, thickness=1, line_type=8, tipLength
                    pt2_long[1] + tipSize * np.sin(angle + np.pi/12)], dtype=np.int32)
     p2 = np.array([pt2_long[0] + tipSize * np.cos(angle - np.pi/12), 
                    pt2_long[1] + tipSize * np.sin(angle - np.pi/12)], dtype=np.int32)
-    
-    print('pt2: ', pt2)
-    print('pt2_long: ', pt2_long)
     
     # Draw the filled arrowhead
     cv2.fillPoly(img, np.array([[tuple(pt2_long.astype(int)), p1, p2]], dtype=np.int32), color)

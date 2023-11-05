@@ -8,13 +8,10 @@ from utils.data_pipeline import *
 from utils.visualizer import *
 from robot.robot_utils import *
 from recording.ft import FTCapture, MockFTCapture, EEF_PITCH_WEIGHT_OFFSET
-from stretch_remote.robot_utils import *
+from stretch_remote.robot_utils import keyboard_teleop, get_pos_dict, move_to_target
 from stretch_remote.remote_client import RemoteClient
 from utils.aruco_detect import ArucoPoseEstimator, find_contact_markers
 
-from tqdm import tqdm
-import timm
-from transformers import T5Model, T5Tokenizer, BertModel, BertTokenizer
 import numpy as np
 import cv2
 import time
@@ -23,13 +20,6 @@ from utils.realsense_utils import RealSense, CameraType
 DEBUG_MODE = False
 
 ##################################################################################
-
-# class Playback(RealSense):
-#     def __init__(self, select_device=0, view=False, auto_expose=True):
-#         pass
-    
-#     def get_frame(self):
-#         pass
 
 def print_yellow(msg):
     print('\033[93m' + msg + '\033[0m')
@@ -40,7 +30,7 @@ def pprint(msg):
         print('\033[92m' + msg + '\033[0m')           
 
 class LiveModel():
-    def __init__(self):
+    def __init__(self, use_robot=True):
         self.config, self.args = parse_config_args()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.stage = 'test'
@@ -53,9 +43,12 @@ class LiveModel():
         elif self.args.use_ft:
             self.ft = FTCapture()
         time.sleep(1)
-        self.rc = RemoteClient(ip=self.args.ip, port=5556)
-        if self.rc.get_status() is None:
-            raise Exception('Remote client not connected')
+        if use_robot:
+            self.rc = RemoteClient(ip=self.args.ip, port=5556)
+            if self.rc.get_status() is None:
+                raise Exception('Remote client not connected')
+        else:
+            self.rc = None
 
         cam_mat, cam_dist = self.realsense.get_camera_intrinsics(CameraType.COLOR)
         self.aruco_pose_estimator = ArucoPoseEstimator(cam_mat, cam_dist)
@@ -65,8 +58,11 @@ class LiveModel():
 
         self.prompt = self.args.prompt
         self.prompt_mod = self.prompt # modified prompt
-        self.rc.move({'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0, 'gripper': 0}) # leveling robot
-        time.sleep(1)
+
+        # init robot if robot is in used
+        if use_robot:
+            self.rc.move({'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0, 'gripper': 0}) # leveling robot
+            time.sleep(1)
 
         self.recording_video = False
 
@@ -118,22 +114,24 @@ class LiveModel():
 
 
     def run_model(self, control_func=None):
-        target_joint = False
-        task_start_time = time.time()
+        """
+        control_func: function that returns a control action, this determines whether we are using a 
+            robot or not
+        """
         
         while not self.stop:
             # for prompt, initial_data, final_data, rgb_paths in tqdm(loader):
             # Add padding to the text input
-            pos_dict = get_pos_dict(self.rc)
-            if pos_dict is not None:
-                self.pos_dict = pos_dict
+            if control_func:
+                pos_dict = get_pos_dict(self.rc)
+                if pos_dict is not None:
+                    self.pos_dict = pos_dict
 
             if self.teleop_mode:
                 # for teleop mode, always use original prompt
                 self.prompt_mod = self.prompt
 
             self.num_frames += 1
-
 
             if self.args.live:
                 self.rgb_image, self.depth_image = self.realsense.get_rgbd_image()
@@ -213,9 +211,18 @@ class LiveModel():
                 self.pred_left_fingertip = t2np(pred['left_fingertip'])
                 self.pred_right_fingertip = t2np(pred['right_fingertip'])
 
-            grip_force = run_grip_force_model(
-                self.grip_force_model, self.pos_dict, self.curr_left_fingertip, self.curr_right_fingertip)
-            self.grip_force = t2float(grip_force)
+            if control_func is None:
+                self.grip_force = 0.0
+            else:
+                # This runs the grip force model, a simple linear model that takes in current
+                # robot state and outputs a grip force
+                grip_force = run_grip_force_model(
+                        self.grip_force_model,
+                        self.pos_dict,
+                        self.curr_left_fingertip,
+                        self.curr_right_fingertip
+                    )
+                self.grip_force = t2float(grip_force)
             pprint(f'grip force: {self.grip_force}')
 
             # bgr to rgb
@@ -329,6 +336,11 @@ class LiveModel():
             if self.args.record_video:
                 self.video.write_frame(viewable_img_noprompt)
                 
+                
+            ###################################################################################################
+            # if keycode == ord('g'):
+            #     move_to_target(pred_fingertips, self.rc, retries=2)
+
             ###################################################################################################
             # if keycode == ord('g'):
             #     move_to_target(pred_fingertips, self.rc, retries=2)
@@ -402,6 +414,7 @@ class LiveModel():
             if keycode == ord('y'):
                 override_next_subgoal = True
 
+            self.control_action = None
             if control_func is not None:
                 self.control_action, next_subgoal = control_func()
 
@@ -437,5 +450,5 @@ class LiveModel():
 ##################################################################################
 
 if __name__ == '__main__':
-    live_model = LiveModel()
-    live_model.run_model()
+    live_model = LiveModel(use_robot=False)
+    live_model.run_model(control_func=None)

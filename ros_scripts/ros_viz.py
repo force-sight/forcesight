@@ -159,7 +159,7 @@ class RosVizInterface:
 
     def publish_wrist_force(self, force_vec, origin, scale=0.05, is_curr=False):
         # Invert the force vector
-        force_vec = -force_vec
+        force_vec = -np.array(force_vec)
 
         # Convert force_vec to a unit vector
         force_unit_vec = force_vec / np.linalg.norm(force_vec)
@@ -330,7 +330,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.rs:
-        rs = RealSense(select_device=args.device)
+        rs = RealSense(select_device=None)
         intr = rs.get_camera_intrinsics(CameraType.COLOR)
         print(intr)
         

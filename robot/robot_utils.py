@@ -163,9 +163,17 @@ def keyboard_teleop(rc, deltas, keycode, self=None):  # enable_moving=True, stop
         self.prompt = input("Enter new prompt: ")
         # self.prompt = self.prompt # NOTE: This might break live model
 
+    if keycode == ord('c') and hasattr(self, 'publish_to_rviz'):
+        if self.publish_to_rviz:
+            print("Stop publishing to rviz")
+            self.publish_to_rviz = False
+        else:
+            print("Start publishing to rviz")
+            self.publish_to_rviz = True
+
     move_ok = (self is None or (hasattr(self, 'enable_moving') and self.enable_moving))
 
-    if move_ok:
+    if move_ok and rc:
         if keycode == ord('h'):     # drive home
             rc.home()
         elif keycode == ord(']'):     # drive X
@@ -211,15 +219,15 @@ def keyboard_teleop(rc, deltas, keycode, self=None):  # enable_moving=True, stop
         # elif keycode == ord('2'):     # drive theta
         #     rc.move({'theta':-deltas['theta']})
 
-        if keycode == ord('\\'):
+        if keycode == ord('\\') and rc:
             pos_dict = get_pos_dict(rc)
             rc.move({'z': pos_dict['z'] + deltas['z'] * 10})
-        if keycode == ord('='):
+        if keycode == ord('=') and rc:
             pos_dict = get_pos_dict(rc)
             rc.move({'y': pos_dict['y'] - deltas['y'] * 10})
 
         # randomize the robot
-        if keycode == ord('/'):  # randomize the robot
+        if keycode == ord('/') and rc:  # randomize the robot
             arm_random = round(random.uniform(.1, .2), 3)  # .016
             lift_random = round(random.uniform(.8, 1.2), 3)
             pitch_random = round(random.uniform(-.75, .25), 3)

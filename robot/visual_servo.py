@@ -114,6 +114,7 @@ class VisualServo(LiveModel):
         if self.args.ros_viz:
             from ros_scripts.ros_viz import RosVizInterface
             self.ros_viz = RosVizInterface()
+            self.publish_to_rviz = True
 
     def get_temporal_error(self, err: StateError) -> StateError:
         self.state_err_history.append(err.to_np())
@@ -271,7 +272,7 @@ class VisualServo(LiveModel):
 
         ######################################################################
 
-        if self.args.ros_viz:
+        if self.args.ros_viz and self.publish_to_rviz:
             """This visualizes the points in 3D space"""
             pcd = get_point_cloud(self.rgb_image, self.depth_image, Intrinsic640())
 

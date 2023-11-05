@@ -6,18 +6,30 @@ Given an RGBD image and a text prompt, ForceSight produces visual-force goals fo
 
 ## Installations
 
+1. Install the conda environment `forcesight`
+
 ```bash
-# first create a conda environment
-conda env update --file environment.yml
+conda env create -f environment.yml
+conda activate forcesight
+````
+
+(Optional) Or manually install the environment and dependencies:
+
+```bash
+# First create a conda environment
+conda create -n fs python=3.8
 conda activate fs
 ```
+Install pytorch from [here](https://pytorch.org/get-started/locally/), then:
+```bash
+conda install libffi
+pip3 install -r requirements.txt
+```
 
-- Also requires installation of classifier-free-guidance-pytorch:
+
+2. Then install `stretch_remote` for robot teleoperation:
 
 ```bash
-git clone https://github.com/jeremy-collins/classifier-free-guidance-pytorch.git
-cd classifier-free-guidance-pytorch
-pip install -e .
 git clone https://github.com/Healthcare-Robotics/stretch_remote.git
 cd stretch_remote
 pip install -e .
@@ -27,8 +39,8 @@ pip install -e .
 
 This is a quick start guide for the project. The robot is not required for this part.
 
-1. Download the dataset, model, and hardware [here](https://1drv.ms/f/s!AjebifpxoPl5hO5bu91QCJSDizws9g?e=h9AlnZ). Place the model in `checkpoints/forcesight_0/` and place the dataset in `data/`.
-   
+1. Download the dataset, model, and hardware [here](https://1drv.ms/f/s!AjebifpxoPl5hO5bu91QCJSDizws9g?e=h9AlnZ). Place the model in `checkpoints/default_config_0/` and place the dataset in `data/`.
+
 2. **Train a model**
 
     Skip this if you plan to use trained checkpoint
@@ -41,15 +53,19 @@ This is a quick start guide for the project. The robot is not required for this 
     ```bash
     python3 -m prediction.view_preds \
         --config default_config \
-        --folder data/test/1-2/top_drawer1 \
+        --folder data/test_new_objects_and_env \
         --index 0 --epoch best --ignore_prefilter
     # --ignore_prefilter is used to ignore the prefiltering step, for faster init
     ```
 
+    You will seen the output plot like this: ![output](assets/view_preds.png)
+
 4. **Show live view**
 
+    This requires a [realsense d405](https://www.intelrealsense.com/depth-camera-d405/) camera.
+
     ```bash
-    
+    python3 -m prediction.live_model --config default_config --index 0 --epoch best --prompt "pick up the mouse"
     ```
 
 ---
@@ -65,7 +81,7 @@ We assume that you have a Stretch Robot and a force torque sensor mountecd on th
 Run stretch remote server
 1. `python3 stretch_remote/stretch_remote/robot_server.py`
 2. `conda activate cfa`
-3. test data collection, `cd ~/action-affordances`
+3. test data collection, `cd ~/force-sight`
 
 ```bash
 # first task
@@ -168,7 +184,8 @@ Test model with live view and visual servoing
 # Visual Servo: Press P to insert prompt,
 # hit key 'T' to switch between view model and visual servoing mode
 # Configs: --ip 100.124.244.50 --use_ft 0
-python3 -m robot.visual_servo --config default_config --index 1 --epoch best --prompt "pick up the mouse" --ip <ROBOTIP>
+# add --ros_viz arg to viz the 3d scene on rviz
+python3 -m robot.visual_servo --config default_config --index 0 --epoch best --prompt "pick up the mouse" --ip <ROBOTIP>
 ```
 
 ---
@@ -198,21 +215,17 @@ To install rospy in conda env run `conda install -c conda-forge ros-rospy`, ***m
 roslaunch realsense2_camera rs_camera.launch enable_pointcloud:=1 infra_width:=640
 
 # view the point cloud
-rviz -d ~/rl/default.rviz
+rviz -d ros_scripts/ros_viz.rviz
 
 # then run the marker pose estimation script
 python3 -m ros_scripts.ros_aruco_detect
 ```
 
 ros viz to visualize the pointcloud and contact stuff in 3D.
-```
+```bash
 python -m ros_scripts.ros_viz
 ```
-
-
-#### Construct Stretch robot urdf
-
-We use the urdf viewer from ROS to visualize the urdf. URDF describes the robot model, and it is helpful to calculate the forward and inverse kinematics of the robot.
+## OthersROS to visualize the urdf. URDF describes the robot model, and it is helpful to calculate the forward and inverse kinematics of the robot.
 
 ```bash
 roslaunch ros_scripts/urdf_viewer.launch model:=robot/stretch_robot.urdf
