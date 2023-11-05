@@ -1,4 +1,4 @@
-name: cfa
+name: fs
 channels:
   - pytorch
   - nvidia
@@ -80,8 +80,8 @@ dependencies:
   - pycparser=2.21=pyhd3eb1b0_0
   - pyopenssl=23.0.0=py310h06a4308_0
   - pysocks=1.7.1=py310h06a4308_0
-  - python=3.10.11=h7a1cb2a_2
-  - python_abi=3.10=2_cp310
+  - python=3.8
+  - python_abi=3.8
   - pytorch=2.0.1=py3.10_cuda11.8_cudnn8.7.0_0
   - pytorch-cuda=11.8=h7e8668a_5
   - pytorch-mutex=1.0=cuda
@@ -172,7 +172,7 @@ dependencies:
       - scikit-learn==1.2.2
       - scipy==1.10.1
       - segment-anything==1.0
-      - sentencepiece==0.1.99
+      - sentencepiece==0.1.91
       - six==1.16.0
       - stack-data==0.6.2
       - tenacity==8.2.2
@@ -189,3 +189,10 @@ dependencies:
       - werkzeug==2.3.0
       - widgetsnbextension==4.0.7
       - zmq==0.0.0
+      - transformations
+      - kinpy
+      - timm
+      - wandb
+      - classifier_free_guidance_pytorch
+      - opencv-contrib-python==4.6.0.66
+      - git+https://github.com/openai/CLIP.git

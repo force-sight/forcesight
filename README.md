@@ -9,7 +9,7 @@ Given an RGBD image and a text prompt, ForceSight produces visual-force goals fo
 ```bash
 # first create a conda environment
 conda env update --file environment.yml
-pip3 install transformations kinpy open3d timm pyrealsense2 transformers wandb classifier_free_guidance_pytorch opencv-contrib-python==4.6.0.66 scikit-image sentencepiece git+https://github.com/openai/CLIP.git
+conda activate fs
 ```
 
 - Also requires installation of classifier-free-guidance-pytorch:
@@ -25,11 +25,14 @@ pip install -e .
 
 ## Quick Start
 
-TODO: This is a quick start guide for the project. The robot is not required for this part.
+This is a quick start guide for the project. The robot is not required for this part.
 
 1. Download the dataset, model, and hardware [here](https://1drv.ms/f/s!AjebifpxoPl5hO5bu91QCJSDizws9g?e=h9AlnZ). Place the model in `checkpoints/forcesight_0/` and place the dataset in `data/`.
    
 2. **Train a model**
+
+    Skip this if you plan to use trained checkpoint
+
     ```bash
     python3 -m prediction.trainer --config default_config
     ```
@@ -41,6 +44,12 @@ TODO: This is a quick start guide for the project. The robot is not required for
         --folder data/test/1-2/top_drawer1 \
         --index 0 --epoch best --ignore_prefilter
     # --ignore_prefilter is used to ignore the prefiltering step, for faster init
+    ```
+
+4. **Show live view**
+
+    ```bash
+    
     ```
 
 ---

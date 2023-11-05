@@ -17,7 +17,7 @@ def load_config(config_name):
 def parse_config_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-cfg', '--config', type=str, default='default')
-    parser.add_argument('--epoch', '-e', type=str, default='0', help='model epoch to load')
+    parser.add_argument('--epoch', '-e', type=str, default='best', help='model epoch to load')
     parser.add_argument('--index', '-i', type=str, default='0', help='keeps track of training sessions using the same config')
     parser.add_argument('--folder', '-f', type=str, default=None, help='folder for data_capture or folder to pull data from if not live')
     parser.add_argument('--stage', '-s', type=str, default=None, help='train, test, or raw')
