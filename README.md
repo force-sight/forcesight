@@ -68,6 +68,8 @@ This is a quick start guide for the project. The robot is not required for this 
     python3 -m prediction.live_model --config default_config --index 0 --epoch best --prompt "pick up the mouse"
     ```
 
+    Click "P" to change the prompt. For more info about the key control, please refer to [keyboard_teleop](https://github.com/force-sight/forcesight/blob/5e2720016f31da6823b3eadfaaeaa7105803b588/robot/robot_utils.py#L140)
+
 ---
 
 Beyond this point, the Documentation contains more detailed information about the project. This will involve the usage of the "Stretch" robot, and the "Realsense" camera.
@@ -80,27 +82,27 @@ We assume that you have a Stretch Robot and a force torque sensor mountecd on th
 
 Run stretch remote server
 1. `python3 stretch_remote/stretch_remote/robot_server.py`
-2. `conda activate cfa`
+2. `conda activate forcesight`
 3. test data collection, `cd ~/force-sight`
 
 ```bash
 # first task
 # OUTPUT Folder format: <TASK>_<DATE>_frame_<STAGE1>_<STAGE2>
-python -m recording.capture_data --config data_collection_5_18 --stage raw --folder <OUTPUT FOLDER> --prompt "flip the switch" --realsense_id 130322272089
+python -m recording.capture_data --config data_collection_5_18 --stage raw --folder <OUTPUT FOLDER> --prompt "flip the switch" --realsense_id <ID>
 
 # stage 1-> 2
-python -m recording.capture_data --config data_collection_5_18 --stage train --folder flip_switch_5_24_frame_1_2 --prompt "flip the switch" --realsense_id 130322272089
+python -m recording.capture_data --config data_collection_5_18 --stage train --folder flip_switch_5_24_frame_1_2 --prompt "flip the switch" --realsense_id <ID>
 
 # stage 2 -> 3
-python -m recording.capture_data --config data_collection_5_18 --stage train --folder flip_switch_5_24_frame_2_3 --prompt "flip the switch" --realsense_id 130322272089
+python -m recording.capture_data --config data_collection_5_18 --stage train --folder flip_switch_5_24_frame_2_3 --prompt "flip the switch" --realsense_id <ID>
 
 # stage 3 -> 4
-python -m recording.capture_data --config data_collection_5_18 --stage raw --folder flip_switch_5_24_frame_2_3 --prompt "flip the switch" --realsense_id 130322272089
+python -m recording.capture_data --config data_collection_5_18 --stage raw --folder flip_switch_5_24_frame_2_3 --prompt "flip the switch" --realsense_id <ID>
 ```
 
 ** change raw to train when done
 
-Key control:
+**Key control**:
  - `wasd` key: up down front back
  - `[]` key: left and right
  - `ijkl` keys: wrist
@@ -127,30 +129,7 @@ python -m prediction.loader --config vit_xattn_meds_held_out_env_5_22 --folder d
 
 ## Train a model
 
-## Set up a config file, and choose the parameters
-```yaml
-LEARNING_RATE # learning rate
-BATCH_SIZE # batch size
-NUM_EPOCHS # number of epochs
-TRANSFORM # data augmentation
-IMAGE_MODEL # name of the image model
-FREEZE_IMAGE_MODEL # freeze the image model
-USE_PATCH_FEATURES # use patch features for dinov2
-TEXT_MODEL # name of the text model
-FREEZE_TEXT_MODEL # freeze the text model
-MULTIMODAL_HEAD # the network that takes image and/or text features and outputs the prediction
-FINGERTIP_LOSS  # fingertip loss function (L1 or L2)
-FORCE_LOSS # force loss function (L1 or L2)
-PITCH_LOSS # pitch loss function (L1 or L2)
-LAMBDA_FINGERTIPS # weight for fingertip loss
-LAMBDA_FORCE # weight for force loss
-LAMBDA_PITCH # weight for pitch loss
-USE_RGBD # use rgbd data instead of rgb
-PRETRAINED # use pre-trained model
-PIXEL_SPACE_OUTPUT # use pixel space as output representation
-PIXEL_SPACE_CENTROID # use pixel space centroid
-```
-**For more details, please refer to the config files in `configs/` directory.**
+Set up a config for each model, an example is provided in [config/default_config.yaml](https://github.com/force-sight/forcesight/blob/main/config/default_config.yml). For more details, please refer to the config files in `configs/` directory.
 
 Start the training:
 ```bash
@@ -219,13 +198,14 @@ rviz -d ros_scripts/ros_viz.rviz
 
 # then run the marker pose estimation script
 python3 -m ros_scripts.ros_aruco_detect
+
+# ros viz to visualize the pointcloud and contact in rviz. --rs to use realsense --ft to use ft sensor
+python -m ros_scripts.ros_viz --rs
 ```
 
-ros viz to visualize the pointcloud and contact stuff in 3D.
-```bash
-python -m ros_scripts.ros_viz
-```
-## OthersROS to visualize the urdf. URDF describes the robot model, and it is helpful to calculate the forward and inverse kinematics of the robot.
+**Others**
+
+ROS to visualize the urdf. URDF describes the robot model, and it is helpful to calculate the forward and inverse kinematics of the robot.
 
 ```bash
 roslaunch ros_scripts/urdf_viewer.launch model:=robot/stretch_robot.urdf
@@ -251,15 +231,6 @@ Data Aug was tested.
 ```bash
 python3 -m utils.test_aug --no_gripper --data <PATH TO DATA FOLDER>
 python3 -m utils.test_aug --translate_pic  --data <PATH TO DATA FOLDER>
-```
-
-
-### Run forward kinematics solver (Deprecated)
-```bash
-python3 -m utils.kdl_server
-
-## For testing
-python3 -m utils.kdl_client
 ```
 
 ---

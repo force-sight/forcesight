@@ -24,12 +24,14 @@ DEBUG_MODE = False
 def print_yellow(msg):
     print('\033[93m' + msg + '\033[0m')
 
-# pretty print in color
 def pprint(msg):
+    """pretty print in color"""
     if DEBUG_MODE:
         print('\033[92m' + msg + '\033[0m')           
 
 class LiveModel():
+    """Live model to run the vision model and control the robot"""
+
     def __init__(self, use_robot=True):
         self.config, self.args = parse_config_args()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -115,10 +117,10 @@ class LiveModel():
 
     def run_model(self, control_func=None):
         """
-        control_func: function that returns a control action, this determines whether we are using a 
-            robot or not
+        control_func:   The control function that takes in the current state
+                        of the robot and outputs a control action. An example:
+                        visual servoing approach
         """
-        
         while not self.stop:
             # for prompt, initial_data, final_data, rgb_paths in tqdm(loader):
             # Add padding to the text input
@@ -154,7 +156,7 @@ class LiveModel():
                 with open('{}/{}.txt'.format(self.prompt_folder, self.num_frames), 'w') as f:
                     f.write(self.prompt_mod)
                 print_yellow(f"NOW RECORDING FRAME {self.num_frames}")
-            
+
             prompt_input = preprocess_prompt(self.config, [self.prompt_mod], self.tokenizer)
 
             # stacking rgb and depth on the channel dimension
