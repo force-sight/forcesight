@@ -9,33 +9,26 @@ Given an RGBD image and a text prompt, ForceSight produces visual-force goals fo
 
 ## Installation
 
-1. Install the conda environment `forcesight`
+Install the conda environment `forcesight`
 
 ```bash
 conda env create -f environment.yml
 conda activate forcesight
 ````
 
-(Optional) Or manually install the environment and dependencies:
+OR
+
+(Optional) Manually install the dependencies:
 
 ```bash
 # First create a conda environment
 conda create -n fs python=3.8
 conda activate fs
 ```
-Install pytorch from [here](https://pytorch.org/get-started/locally/), then:
+If manually installing dependencies, install PyTorch from [here](https://pytorch.org/get-started/locally/), then:
 ```bash
 conda install libffi
 pip3 install -r requirements.txt
-```
-
-
-2. Then install `stretch_remote` for robot teleoperation:
-
-```bash
-git clone https://github.com/Healthcare-Robotics/stretch_remote.git
-cd stretch_remote
-pip install -e .
 ```
 
 ## Quick Start
@@ -46,7 +39,7 @@ The following is a quick start guide for the project. The robot is not required 
 
 2. **Train a model**
 
-    Skip this if you plan to use trained checkpoint
+    Skip this if using a trained checkpoint
 
     ```bash
     python -m prediction.trainer --config default_config
@@ -61,7 +54,9 @@ The following is a quick start guide for the project. The robot is not required 
     # --ignore_prefilter is used to ignore the prefiltering step, for faster init
     ```
 
-    You will seen the output plot like this: ![output](assets/view_preds.png)
+    You will seen the output plot like this:
+    
+    ![output](assets/view_preds.png)
 
 4. **Show live view**
 
@@ -75,13 +70,18 @@ The following is a quick start guide for the project. The robot is not required 
 
 ---
 
-Beyond this point, the Documentation contains more detailed information about the project. This will involve the usage of the "Stretch" robot, and the "Realsense" camera.
+Beyond this point, the Documentation contains more detailed information about the project. This will involve the usage of the [Stretch](https://hello-robot.com/stretch-2) robot and the [Realsense D405](https://www.intelrealsense.com/depth-camera-d405/) camera.
 
 ## Data collection
 
-We assume that you have a Stretch Robot and a force torque sensor mounted on the wrist of the end-effector.
+We assume that you have a Stretch Robot and a force/torque sensor mounted on the wrist of the robot. Hardware to mount an [ATI Mini45](https://www.ati-ia.com/products/ft/ft_models.aspx?id=mini45) force/torque sensor to the Stretch can be found [here](https://1drv.ms/f/s!AjebifpxoPl5hO5bu91QCJSDizws9g?e=h9AlnZ).
 
-- Requires installation of stretch_remote: https://github.com/Healthcare-Robotics/stretch_remote
+- Requires installation of stretch_remote:
+```bash
+git clone https://github.com/Healthcare-Robotics/stretch_remote.git
+cd stretch_remote
+pip install -e .
+```
 
 Run the stretch remote server on the robot:
 1. `python3 stretch_remote/stretch_remote/robot_server.py`
@@ -117,7 +117,7 @@ We use a randomizer to quickly obtain varied data, in `robot/robot_utils.py`, `i
 
 Data collection for grip data
 ```bash
-python -m recording.capture_grip_data --bipartite 0 --config grip_force_5_21 --folder grip_force_5_25_frame_0_0 --stage train --ip 100.99.105.59
+python -m recording.capture_grip_data --bipartite 0 --config grip_force_5_21 --folder grip_force_5_25_frame_0_0 --stage train --ip <ROBOT IP>
 ```
 
 ### Load the new data
@@ -125,7 +125,7 @@ python -m recording.capture_grip_data --bipartite 0 --config grip_force_5_21 --f
 We will try to load the data with a loader to check the newly collected raw data.
 
 ```bash
-python -m prediction.loader --config vit_xattn_meds_held_out_env_5_22 --folder data/raw
+python -m prediction.loader --config <CONFIG> --folder data/raw
 ```
 
 ## Train a model
@@ -134,7 +134,7 @@ Set up a config for each model. The config used for ForceSight is provided in [c
 
 Start the training:
 ```bash
-python -m prediction.trainer --config <CONFIG FILE>
+python -m prediction.trainer --config <CONFIG>
 ```
 
 ## Train grip force model (OPTIONAL)
@@ -143,15 +143,15 @@ Since grip force measurement is not available from the robot, we train a grip fo
 
 **Grip force data collection**
 
-`python -m recording.capture_data --config grip_force_dist_pos_effort_5_25 --stage raw --folder grip_force_5_25 --realsense_id <ID> --bipartite 0`
+`python -m recording.capture_data --config <CONFIG> --stage raw --folder grip_force_5_25 --realsense_id <ID> --bipartite 0`
 
 **Train the grip force prediction model**
 
-`python -m prediction.grip_force_trainer --config grip_force_dist_pos_effort_5_25 --bipartite 0`
+`python -m prediction.grip_force_trainer --config <CONFIG> --bipartite 0`
 
 ## Running ForceSight on a real robot
 
-After training, we can run the model on the robot. We will use `ForceSight` to generate kinematic and force goals for the robot, and the low-level controller will then control the robot to reach the goals.
+After training, we can run the model on the robot. We will use ForceSight to generate kinematic and force goals for the robot, and the low-level controller will then control the robot to reach the goals.
 
 To run the robot, we will need to run `stretch_remote/stretch_remote/robot_server.py` on the robot, and then run the `visual_servo.py`. The `visual_servo.py` can be run on a different computer with a GPU, and communication is specified by the `--ip` argument.
 
@@ -166,6 +166,8 @@ Test model with live view and visual servoing
 # add --ros_viz arg to visualize the 3d scene on rviz
 python -m robot.visual_servo --config default_config --index 0 --epoch best --prompt "pick up the keys" --ip <ROBOT IP>
 ```
+
+If you do not have a force/torque sensor, you can still run ForceSight on the robot by passing `--use_ft 0` as an arg. If running `visual_servo.py`, set `USE_FORCE_OBJECTIVE` to `False` to ignore forces. Note that performance will suffer without the use of force goals, however.
 
 ---
 
