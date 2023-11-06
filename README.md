@@ -42,7 +42,7 @@ pip install -e .
 
 The following is a quick start guide for the project. The robot is not required for this part.
 
-1. Download the dataset, model, and hardware [here](https://1drv.ms/f/s!AjebifpxoPl5hO5bu91QCJSDizws9g?e=h9AlnZ). Place the model in `checkpoints/default_config_0/` and place the dataset in `data/`.
+1. Download the dataset, model, and hardware [here](https://1drv.ms/f/s!AjebifpxoPl5hO5bu91QCJSDizws9g?e=h9AlnZ). Place the model in `checkpoints/forcesight_0/` and place the dataset in `data/`.
 
 2. **Train a model**
 
@@ -71,7 +71,7 @@ The following is a quick start guide for the project. The robot is not required 
     python -m prediction.live_model --config default_config --index 0 --epoch best --prompt "pick up the keys"
     ```
 
-    Click "P" to change the prompt. For more info about the key control, please refer to [keyboard_teleop](https://github.com/force-sight/forcesight/blob/5e2720016f31da6823b3eadfaaeaa7105803b588/robot/robot_utils.py#L140)
+    Press "p" to change the prompt. For more info about the key control, please refer to [keyboard_teleop](https://github.com/force-sight/forcesight/blob/5e2720016f31da6823b3eadfaaeaa7105803b588/robot/robot_utils.py#L140)
 
 ---
 
@@ -79,7 +79,7 @@ Beyond this point, the Documentation contains more detailed information about th
 
 ## Data collection
 
-We assume that you have a Stretch Robot and a force torque sensor mountecd on the wrist of the end effector.
+We assume that you have a Stretch Robot and a force torque sensor mounted on the wrist of the end-effector.
 
 - Requires installation of stretch_remote: https://github.com/Healthcare-Robotics/stretch_remote
 
@@ -90,20 +90,18 @@ Run the stretch remote server on the robot:
 
 ```bash
 # first task
-# OUTPUT Folder format: <TASK>_<DATE>_frame_<STAGE1>_<STAGE2>
-python -m recording.capture_data --config data_collection_5_18 --stage raw --folder <OUTPUT FOLDER> --prompt "flip the switch" --realsense_id <ID>
+# OUTPUT Folder format: <TASK>_frame_<STAGE1>_<STAGE2>
+python -m recording.capture_data --config <CONFIG> --stage train --folder <OUTPUT FOLDER> --prompt "pick up the apple" --realsense_id <ID>
 
 # stage 1-> 2
-python -m recording.capture_data --config data_collection_5_18 --stage train --folder flip_switch_5_24_frame_1_2 --prompt "flip the switch" --realsense_id <ID>
+python -m recording.capture_data --config <CONFIG> --stage train --folder pick_up_the_apple_frame_1_2 --prompt "pick up the apple" --realsense_id <ID>
 
 # stage 2 -> 3
-python -m recording.capture_data --config data_collection_5_18 --stage train --folder flip_switch_5_24_frame_2_3 --prompt "flip the switch" --realsense_id <ID>
+python -m recording.capture_data --config <CONFIG> --stage train --folder pick_up_the_apple_frame_2_3 --prompt "pick up the apple" --realsense_id <ID>
 
 # stage 3 -> 4
-python -m recording.capture_data --config data_collection_5_18 --stage raw --folder flip_switch_5_24_frame_2_3 --prompt "flip the switch" --realsense_id <ID>
+python -m recording.capture_data --config <CONFIG> --stage train --folder pick_up_the_apple_frame_3_4 --prompt "pick up the apple" --realsense_id <ID>
 ```
-
-** change raw to train when done
 
 **Key control**:
  - `wasd` key: up down front back
@@ -115,7 +113,7 @@ python -m recording.capture_data --config data_collection_5_18 --stage raw --fol
  - `backspace`: delete
  - `/`: randomize the position of the end effector
 
-We use a randomizer to change the random val, in `robot/robot_utils.py`, `if keycode == ord('/')`. This speeds up the data collection process.
+We use a randomizer to quickly obtain varied data, in `robot/robot_utils.py`, `if keycode == ord('/')`. This speeds up the data collection process.
 
 Data collection for grip data
 ```bash
@@ -132,7 +130,7 @@ python -m prediction.loader --config vit_xattn_meds_held_out_env_5_22 --folder d
 
 ## Train a model
 
-Set up a config for each model, an example is provided in [config/default_config.yaml](https://github.com/force-sight/forcesight/blob/main/config/default_config.yml). For more details, please refer to the config files in `configs/` directory.
+Set up a config for each model. The config used for ForceSight is provided in [config/forcesight.yaml](https://github.com/force-sight/forcesight/blob/main/config/forcesight.yml). For more details, please refer to the config files in `configs/` directory.
 
 Start the training:
 ```bash
@@ -141,11 +139,11 @@ python -m prediction.trainer --config <CONFIG FILE>
 
 ## Train grip force model (OPTIONAL)
 
-Since grip force measurement is not available from the robot, we would train a grip force model to predict the grip force, from the input values of: fingertips location, motor effort and position. A default model is provided in `grip_force_checkpoints/` directory.
+Since grip force measurement is not available from the robot, we train a grip force model to predict the grip force, given fingertip locations, motor effort, and motor position. A default model is provided in `grip_force_checkpoints/` directory.
 
 **Grip force data collection**
 
-`python -m recording.capture_data --config grip_force_dist_pos_effort_5_25 --stage raw --folder grip_force_5_25 --realsense_id 130322272089 --bipartite 0`
+`python -m recording.capture_data --config grip_force_dist_pos_effort_5_25 --stage raw --folder grip_force_5_25 --realsense_id <ID> --bipartite 0`
 
 **Train the grip force prediction model**
 
@@ -158,7 +156,7 @@ After training, we can run the model on the robot. We will use `ForceSight` to g
 To run the robot, we will need to run `stretch_remote/stretch_remote/robot_server.py` on the robot, and then run the `visual_servo.py`. The `visual_servo.py` can be run on a different computer with a GPU, and communication is specified by the `--ip` argument.
 
 ```bash
-python -m robot.visual_servo --config default_config --index 6 --epoch latest --prompt "place the object in the hand" --ip <Robot IP>
+python -m robot.visual_servo --config default_config --index 6 --epoch latest --prompt "place the object in the hand" --ip <ROBOT IP>
 ```
 
 Test model with live view and visual servoing
@@ -175,7 +173,7 @@ python -m robot.visual_servo --config default_config --index 0 --epoch best --pr
 
 ### Run Realsense camera
 
-Util scripts to run aruco detect and visualize the point cloud.
+Util scripts to run aruco detection and visualize the point cloud.
 
 ```bash
 # Run realsense camera
@@ -188,9 +186,9 @@ python -m utils.aruco_detect --rs
 
 ### Run with ROS
 
-To install rospy in conda env run `conda install -c conda-forge ros-rospy`, ***make sure you are using Python 3.8 or follow this: https://robostack.github.io/GettingStarted.html
+To install rospy in conda env, run `conda install -c conda-forge ros-rospy`, ***make sure you are using Python 3.8 or follow this: https://robostack.github.io/GettingStarted.html
 
-*Note: ROS tends to be unfriendly with conda env, thus this installation will not be seamless.*
+*Note: ROS tends to be unfriendly with conda env, so this installation will not be seamless.*
 
 ```bash
 roslaunch realsense2_camera rs_camera.launch enable_pointcloud:=1 infra_width:=640
