@@ -523,9 +523,9 @@ def criterion(output, initial_data, final_data, timestep):
 if __name__ == '__main__':
     config, args = parse_config_args()
     if args.num_folders or args.keypoints_per_folder:
-        wandb.init(project='action-affordances-dataset')
+        wandb.init(project='force-sight-dataset')
     else:
-        wandb.init(project='action-affordances-fixed_depth_6-6')
+        wandb.init(project='force-sight-fixed_depth_6-6')
 
     wandb.config.update(config)
     wandb.config.update(args)
@@ -544,9 +544,7 @@ if __name__ == '__main__':
     if config.LAMBDA_TIMESTEP > 0:
         print('CLASSIFYING TIMESTEP')
     
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE)
-
-    
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.LEARNING_RATE)    
 
     # number of files in ./checkpoints that contain args.config
     folder_index = len([f for f in os.listdir(config.MODEL_DIR) if f.startswith(args.config)])

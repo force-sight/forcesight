@@ -94,7 +94,7 @@ class ConditionedVisionTransformer(nn.Module):
                 model_types = text_model, #'t5',    
                 hidden_dims = tuple([self.vit_model.embed_dim] * len(self.vit_model.model.blocks)),
                 hiddens_channel_first = False,
-                cond_drop_prob = 0.0 # 0.2  # conditional dropout 20% of the time, must be greater than 0. to unlock classifier free guidance
+                cond_drop_prob = 0.0 # 0.2 # conditional dropout 20% of the time. Must be greater than 0 if you want classifier free guidance to work
             ).cuda()
         elif self.cond_method == 'xattn':
             # Cross-Attention

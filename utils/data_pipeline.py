@@ -157,7 +157,8 @@ def preprocess_prompt(config, prompt, tokenizer):
     elif config.TEXT_MODEL.split('-')[0] == 'clip':
         processed_prompt = tokenizer(prompt).to(device)
     elif config.TEXT_MODEL.split('-')[0] == 'bert':
-        # processed_prompt = tokenizer(prompt, padding='max_length', max_length=32, return_tensors='pt', truncation=True)["input_ids"].to(device)
+        # processed_prompt = tokenizer(prompt, padding='max_length',
+        #       max_length=32, return_tensors='pt', truncation=True)["input_ids"].to(device)
         processed_prompt = tokenizer(prompt, return_tensors="pt").to(device)
         
     return processed_prompt
@@ -178,7 +179,8 @@ def preprocess_rgbd(config, rgb_image, depth_image):
                             CenterCrop(config.IMAGE_SIZE),
                             convert_image_to_rgb,
                             ToTensor(),
-                            Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
+                            Normalize((0.48145466, 0.4578275, 0.40821073),
+                                      (0.26862954, 0.26130258, 0.27577711)),
                             ])
         
         # converting to PIL image
@@ -190,7 +192,8 @@ def preprocess_rgbd(config, rgb_image, depth_image):
         rgb_image = torch.from_numpy(rgb_image).permute(2, 0, 1).float() / 255.0
 
     depth_image = depth_image.astype(np.float32)
-    depth_image = cv2.resize(depth_image, (config.IMAGE_SIZE, config.IMAGE_SIZE), interpolation=cv2.INTER_NEAREST)
+    depth_image = cv2.resize(depth_image, (config.IMAGE_SIZE, config.IMAGE_SIZE),
+                             interpolation=cv2.INTER_NEAREST)
     depth_image = torch.from_numpy(depth_image).unsqueeze(0).float() / 65535.0
 
     if 'jitter' in config.TRANSFORM:
@@ -297,7 +300,8 @@ def centroid_to_fingertips(centroid, width, yaw=0):
 
 def fingertips_to_centroid_width_yaw(left_fingertip, right_fingertip):
     """convert from fingertips to centroid, yaw, width representation"""
-    yaw = np.arctan2(right_fingertip[2] - left_fingertip[2], right_fingertip[0] - left_fingertip[0])
+    yaw = np.arctan2(right_fingertip[2] - left_fingertip[2],
+                     right_fingertip[0] - left_fingertip[0])
     width = np.linalg.norm(right_fingertip - left_fingertip)
     centroid = (left_fingertip + right_fingertip) / 2
     return centroid, width, yaw

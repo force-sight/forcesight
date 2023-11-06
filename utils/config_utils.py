@@ -17,7 +17,7 @@ def load_config(config_name):
 def parse_config_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-cfg', '--config', type=str, default='default')
-    parser.add_argument('--epoch', '-e', type=str, default='0', help='model epoch to load')
+    parser.add_argument('--epoch', '-e', type=str, default='best', help='model epoch to load')
     parser.add_argument('--index', '-i', type=str, default='0', help='keeps track of training sessions using the same config')
     parser.add_argument('--folder', '-f', type=str, default=None, help='folder for data_capture or folder to pull data from if not live')
     parser.add_argument('--stage', '-s', type=str, default=None, help='train, test, or raw')
@@ -52,6 +52,7 @@ def parse_config_args():
     parser.add_argument('--save_every_epoch', action='store_true', help='save a checkpoint every epoch')
     parser.add_argument('--binary_grip', action='store_true', help='binary gripper state')
     parser.add_argument('--ablate_force', action='store_true', help='dont use force goals')
+    parser.add_argument('--ignore_robot', action='store_true', help='dont connect to the robot')
 
     args = parser.parse_args()
     return load_config(args.config), args

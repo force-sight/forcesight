@@ -13,6 +13,7 @@ from stretch_remote.robot_utils import read_robot_status
 from robot.kdl_client import get_inverse_kinematics
 import random
 from utils.transform import transform_coord, pose_to_mat, mat_to_pose
+from tkinter import Tk, simpledialog, font
 
 ##############################################################################
 
@@ -160,12 +161,31 @@ def keyboard_teleop(rc, deltas, keycode, self=None):  # enable_moving=True, stop
 
     # set the prompt
     if keycode == ord('p') and hasattr(self, 'prompt'):
-        self.prompt = input("Enter new prompt: ")
+        # self.prompt = input("Enter new prompt: ")
+        # Create a Tkinter root widget
+        root = Tk()
+        root.withdraw()  # We don't want a full GUI, so keep the root window from appearing
+
+        # Customize the font size
+        myFont = font.Font(family='Times New Roman', size=20, weight='bold')
+        root.option_add("*Font", myFont)
+
+        # Show an input box and wait for text
+        self.prompt = simpledialog.askstring("Input", "Enter new prompt:")
+
         # self.prompt = self.prompt # NOTE: This might break live model
+
+    if keycode == ord('c') and hasattr(self, 'publish_to_rviz'):
+        if self.publish_to_rviz:
+            print("Stop publishing to rviz")
+            self.publish_to_rviz = False
+        else:
+            print("Start publishing to rviz")
+            self.publish_to_rviz = True
 
     move_ok = (self is None or (hasattr(self, 'enable_moving') and self.enable_moving))
 
-    if move_ok:
+    if move_ok and rc:
         if keycode == ord('h'):     # drive home
             rc.home()
         elif keycode == ord(']'):     # drive X
@@ -211,15 +231,15 @@ def keyboard_teleop(rc, deltas, keycode, self=None):  # enable_moving=True, stop
         # elif keycode == ord('2'):     # drive theta
         #     rc.move({'theta':-deltas['theta']})
 
-        if keycode == ord('\\'):
+        if keycode == ord('\\') and rc:
             pos_dict = get_pos_dict(rc)
             rc.move({'z': pos_dict['z'] + deltas['z'] * 10})
-        if keycode == ord('='):
+        if keycode == ord('=') and rc:
             pos_dict = get_pos_dict(rc)
             rc.move({'y': pos_dict['y'] - deltas['y'] * 10})
 
         # randomize the robot
-        if keycode == ord('/'):  # randomize the robot
+        if keycode == ord('/') and rc:  # randomize the robot
             arm_random = round(random.uniform(.1, .2), 3)  # .016
             lift_random = round(random.uniform(.8, 1.2), 3)
             pitch_random = round(random.uniform(-.75, .25), 3)

@@ -8,13 +8,10 @@ from utils.data_pipeline import *
 from utils.visualizer import *
 from robot.robot_utils import *
 from recording.ft import FTCapture, MockFTCapture, EEF_PITCH_WEIGHT_OFFSET
-from stretch_remote.robot_utils import *
+# from stretch_remote.robot_utils import get_pos_dict, move_to_target
 from stretch_remote.remote_client import RemoteClient
 from utils.aruco_detect import ArucoPoseEstimator, find_contact_markers
 
-from tqdm import tqdm
-import timm
-from transformers import T5Model, T5Tokenizer, BertModel, BertTokenizer
 import numpy as np
 import cv2
 import time
@@ -24,23 +21,18 @@ DEBUG_MODE = False
 
 ##################################################################################
 
-# class Playback(RealSense):
-#     def __init__(self, select_device=0, view=False, auto_expose=True):
-#         pass
-    
-#     def get_frame(self):
-#         pass
-
 def print_yellow(msg):
     print('\033[93m' + msg + '\033[0m')
 
-# pretty print in color
 def pprint(msg):
+    """pretty print in color"""
     if DEBUG_MODE:
         print('\033[92m' + msg + '\033[0m')           
 
 class LiveModel():
-    def __init__(self):
+    """Live model to run the vision model and control the robot"""
+
+    def __init__(self, use_robot=True):
         self.config, self.args = parse_config_args()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.stage = 'test'
@@ -53,9 +45,12 @@ class LiveModel():
         elif self.args.use_ft:
             self.ft = FTCapture()
         time.sleep(1)
-        self.rc = RemoteClient(ip=self.args.ip, port=5556)
-        if self.rc.get_status() is None:
-            raise Exception('Remote client not connected')
+        if use_robot:
+            self.rc = RemoteClient(ip=self.args.ip, port=5556)
+            if self.rc.get_status() is None:
+                raise Exception('Remote client not connected')
+        else:
+            self.rc = None
 
         cam_mat, cam_dist = self.realsense.get_camera_intrinsics(CameraType.COLOR)
         self.aruco_pose_estimator = ArucoPoseEstimator(cam_mat, cam_dist)
@@ -65,8 +60,11 @@ class LiveModel():
 
         self.prompt = self.args.prompt
         self.prompt_mod = self.prompt # modified prompt
-        self.rc.move({'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0, 'gripper': 0}) # leveling robot
-        time.sleep(1)
+
+        # init robot if robot is in used
+        if use_robot:
+            self.rc.move({'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0, 'gripper': 0}) # leveling robot
+            time.sleep(1)
 
         self.recording_video = False
 
@@ -118,22 +116,24 @@ class LiveModel():
 
 
     def run_model(self, control_func=None):
-        target_joint = False
-        task_start_time = time.time()
-        
+        """
+        control_func:   The control function that takes in the current state
+                        of the robot and outputs a control action. An example:
+                        visual servoing approach
+        """
         while not self.stop:
             # for prompt, initial_data, final_data, rgb_paths in tqdm(loader):
             # Add padding to the text input
-            pos_dict = get_pos_dict(self.rc)
-            if pos_dict is not None:
-                self.pos_dict = pos_dict
+            if control_func:
+                pos_dict = get_pos_dict(self.rc)
+                if pos_dict is not None:
+                    self.pos_dict = pos_dict
 
             if self.teleop_mode:
                 # for teleop mode, always use original prompt
                 self.prompt_mod = self.prompt
 
             self.num_frames += 1
-
 
             if self.args.live:
                 self.rgb_image, self.depth_image = self.realsense.get_rgbd_image()
@@ -156,7 +156,7 @@ class LiveModel():
                 with open('{}/{}.txt'.format(self.prompt_folder, self.num_frames), 'w') as f:
                     f.write(self.prompt_mod)
                 print_yellow(f"NOW RECORDING FRAME {self.num_frames}")
-            
+
             prompt_input = preprocess_prompt(self.config, [self.prompt_mod], self.tokenizer)
 
             # stacking rgb and depth on the channel dimension
@@ -213,9 +213,18 @@ class LiveModel():
                 self.pred_left_fingertip = t2np(pred['left_fingertip'])
                 self.pred_right_fingertip = t2np(pred['right_fingertip'])
 
-            grip_force = run_grip_force_model(
-                self.grip_force_model, self.pos_dict, self.curr_left_fingertip, self.curr_right_fingertip)
-            self.grip_force = t2float(grip_force)
+            if control_func is None:
+                self.grip_force = 0.0
+            else:
+                # This runs the grip force model, a simple linear model that takes in current
+                # robot state and outputs a grip force
+                grip_force = run_grip_force_model(
+                        self.grip_force_model,
+                        self.pos_dict,
+                        self.curr_left_fingertip,
+                        self.curr_right_fingertip
+                    )
+                self.grip_force = t2float(grip_force)
             pprint(f'grip force: {self.grip_force}')
 
             # bgr to rgb
@@ -223,14 +232,16 @@ class LiveModel():
 
             if self.args.use_ft:
                 self.curr_force = self.ft.get_ft() - self.ft_offset
-                self.pred_force = t2np(pred["force"])
-                
                 # this applies the offset
                 self.curr_force -= EEF_PITCH_WEIGHT_OFFSET
-                self.pred_force -= EEF_PITCH_WEIGHT_OFFSET[:3]
+            else:
+                self.curr_force = np.zeros(6)
+                
+            self.pred_force = t2np(pred["force"])
+            self.pred_force -= EEF_PITCH_WEIGHT_OFFSET[:3]
 
-                pprint(f'current force: {self.curr_force}')
-                pprint(f'pred final force: {self.pred_force}')
+            pprint(f'current force: {self.curr_force}')
+            pprint(f'pred final force: {self.pred_force}')
             
             ft_origin = (self.curr_left_fingertip + self.curr_right_fingertip) / 2
 
@@ -317,7 +328,9 @@ class LiveModel():
                     viewable_img_noprompt = visualize_forces(viewable_img_noprompt, ft_pred_origin, self.pred_force, color=(0, 255, 255))
                 viewable_depth = cv2.applyColorMap(cv2.convertScaleAbs(self.depth_image, alpha=0.03), cv2.COLORMAP_JET)
 
-            cv2.imshow('rgb', viewable_img_noprompt)
+            # cv2.imshow('rgb', viewable_img_noprompt)
+            viewable_img_prompt = visualize_prompt(viewable_img_noprompt, is_teleop_text + self.prompt_mod)
+            cv2.imshow('rgb', viewable_img_prompt)
                 
             # print('left error (m): ', np.linalg.norm(pred['left_fingertip'].cpu().numpy()[0] - final_left_fingertip.cpu().numpy()))
             # print('right error (m): ', np.linalg.norm(pred['right_fingertip'].cpu().numpy()[0] - final_right_fingertip.cpu().numpy()))
@@ -329,6 +342,11 @@ class LiveModel():
             if self.args.record_video:
                 self.video.write_frame(viewable_img_noprompt)
                 
+                
+            ###################################################################################################
+            # if keycode == ord('g'):
+            #     move_to_target(pred_fingertips, self.rc, retries=2)
+
             ###################################################################################################
             # if keycode == ord('g'):
             #     move_to_target(pred_fingertips, self.rc, retries=2)
@@ -402,6 +420,7 @@ class LiveModel():
             if keycode == ord('y'):
                 override_next_subgoal = True
 
+            self.control_action = None
             if control_func is not None:
                 self.control_action, next_subgoal = control_func()
 
@@ -421,6 +440,10 @@ class LiveModel():
                             self.prompt_mod = self.prompt + timestep_to_subgoal_text(self.current_subgoal_idx)
                         print(f"Now to {self.prompt_mod}")
 
+                        if timestep_to_subgoal_text(self.current_subgoal_idx, self.prompt) == ", done":
+                            self.rc.home()
+                            self.teleop_mode = True
+
             # print('left error (m): ', np.linalg.norm(pred['left_fingertip'].cpu().numpy()[0] - final_left_fingertip.cpu().numpy()))
             # print('right error (m): ', np.linalg.norm(pred['right_fingertip'].cpu().numpy()[0] - final_right_fingertip.cpu().numpy()))
             # left_error = np.linalg.norm(pred['left_fingertip'].cpu().numpy()[0] - final_left_fingertip.cpu().numpy())
@@ -437,5 +460,5 @@ class LiveModel():
 ##################################################################################
 
 if __name__ == '__main__':
-    live_model = LiveModel()
-    live_model.run_model()
+    live_model = LiveModel(use_robot=False)
+    live_model.run_model(control_func=None)

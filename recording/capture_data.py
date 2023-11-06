@@ -20,18 +20,6 @@ import json
 import re
 import datetime
 
-'''
-conda deactivate
-cd
-stretch_robot_home.py 
-python3 stretch_remote/stretch_remote/robot_server.py
-conda activate cfa
-python -m recording.capture_data --config data_collection_5_18 --stage raw --folder medicine_bottle_5_21_frame_1_2 --view 1 --prompt "pick up the medicine bottle" --bipartite 1
-python -m prediction.loader --config data_collection_5_18 --stage raw --folder data/raw/medicine_bottle_5_21_frame_1_2 --view 1 --bipartite 1
-conda deactivate
-cd
-python3 stretch_remote/stretch_remote/robot_server.py
-'''
 
 HOME_JOINTS = {'y':0.0, 'pitch': 0., 'gripper': 50, 'roll': -0.0, 'yaw': 0.0}
 

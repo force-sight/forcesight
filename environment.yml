@@ -1,4 +1,4 @@
-name: cfa
+name: forcesight
 channels:
   - pytorch
   - nvidia
@@ -172,7 +172,7 @@ dependencies:
       - scikit-learn==1.2.2
       - scipy==1.10.1
       - segment-anything==1.0
-      - sentencepiece==0.1.99
+      - sentencepiece==0.1.91
       - six==1.16.0
       - stack-data==0.6.2
       - tenacity==8.2.2
@@ -189,3 +189,10 @@ dependencies:
       - werkzeug==2.3.0
       - widgetsnbextension==4.0.7
       - zmq==0.0.0
+      - transformations
+      - kinpy
+      - timm
+      - wandb
+      - classifier_free_guidance_pytorch
+      - opencv-contrib-python==4.6.0.66
+      - git+https://github.com/openai/CLIP.git

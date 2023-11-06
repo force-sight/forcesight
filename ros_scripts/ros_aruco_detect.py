@@ -15,7 +15,6 @@ from geometry_msgs.msg import TransformStamped
 from cv_bridge import CvBridge
 
 
-
 ##############################################################################
 
 class ImageSubscriber:
