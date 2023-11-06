@@ -175,14 +175,6 @@ def keyboard_teleop(rc, deltas, keycode, self=None):  # enable_moving=True, stop
 
         # self.prompt = self.prompt # NOTE: This might break live model
 
-    if keycode == ord('c') and hasattr(self, 'publish_to_rviz'):
-        if self.publish_to_rviz:
-            print("Stop publishing to rviz")
-            self.publish_to_rviz = False
-        else:
-            print("Start publishing to rviz")
-            self.publish_to_rviz = True
-
     move_ok = (self is None or (hasattr(self, 'enable_moving') and self.enable_moving))
 
     if move_ok and rc:

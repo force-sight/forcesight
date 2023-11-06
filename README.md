@@ -42,13 +42,13 @@ The following is a quick start guide for the project. The robot is not required 
     Skip this if using a trained checkpoint
 
     ```bash
-    python -m prediction.trainer --config default_config
+    python -m prediction.trainer --config forcesight
     ```
 
 3. **Evaluate the prediction**
     ```bash
     python -m prediction.view_preds \
-        --config default_config \
+        --config forcesight \
         --folder data/test_new_objects_and_env \
         --index 0 --epoch best --ignore_prefilter
     # --ignore_prefilter is used to ignore the prefiltering step, for faster init
@@ -63,7 +63,7 @@ The following is a quick start guide for the project. The robot is not required 
     This requires a [realsense d405](https://www.intelrealsense.com/depth-camera-d405/) camera.
 
     ```bash
-    python -m prediction.live_model --config default_config --index 0 --epoch best --prompt "pick up the keys"
+    python -m prediction.live_model --config forcesight --index 0 --epoch best --prompt "pick up the keys"
     ```
 
     Press "p" to change the prompt. For more info about the key control, please refer to [keyboard_teleop](https://github.com/force-sight/forcesight/blob/5e2720016f31da6823b3eadfaaeaa7105803b588/robot/robot_utils.py#L140)
@@ -155,17 +155,20 @@ After training, we can run the model on the robot. We will use ForceSight to gen
 
 To run the robot, we will need to run `stretch_remote/stretch_remote/robot_server.py` on the robot, and then run the `visual_servo.py`. The `visual_servo.py` can be run on a different computer with a GPU, and communication is specified by the `--ip` argument.
 
-```bash
-python -m robot.visual_servo --config default_config --index 6 --epoch latest --prompt "place the object in the hand" --ip <ROBOT IP>
-```
-
 Test model with live view and visual servoing
+
 ```bash
 # Visual Servo: Press 'p' to insert prompt,
 # Press 't' to switch between view model and visual servoing mode
 # add --ros_viz arg to visualize the 3d scene on rviz
-python -m robot.visual_servo --config default_config --index 0 --epoch best --prompt "pick up the keys" --ip <ROBOT IP>
+python -m robot.visual_servo --config forcesight --index 0 --epoch best --prompt "pick up the keys" --ip <ROBOT IP>
 ```
+
+ - `t` key to switch between view model and visual servoing mode
+ - `p` key to insert prompt
+ - `wasd[]ijkl`` to control the robot (refer above)
+ - `h` home
+ - `c` switch between publish or not publish point cloud (if using --ros_viz)
 
 If you do not have a force/torque sensor, you can still run ForceSight on the robot by passing `--use_ft 0` as an arg. If running `visual_servo.py`, set `USE_FORCE_OBJECTIVE` to `False` to ignore forces. Note that performance will suffer without the use of force goals, however.
 

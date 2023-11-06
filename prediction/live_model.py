@@ -346,10 +346,6 @@ class LiveModel():
             ###################################################################################################
             # if keycode == ord('g'):
             #     move_to_target(pred_fingertips, self.rc, retries=2)
-
-            ###################################################################################################
-            # if keycode == ord('g'):
-            #     move_to_target(pred_fingertips, self.rc, retries=2)
             ###################################################################################################
             if keycode == ord('t'):
                 pprint(f'\nTeleop is now {self.teleop_mode}, switch to {not self.teleop_mode}\n')
@@ -360,6 +356,14 @@ class LiveModel():
                 self.args.ablate_force = not self.args.ablate_force
             if keycode == ord('g'):
                 self.args.binary_grip = not self.args.binary_grip
+            ###################################################################################################
+            if keycode == ord('c') and hasattr(self, 'publish_to_rviz'):
+                if self.publish_to_rviz:
+                    print_yellow("Stop publishing to rviz")
+                    self.publish_to_rviz = False
+                else:
+                    print_yellow("Start publishing to rviz")
+                    self.publish_to_rviz = True
             ###################################################################################################
             elif keycode == ord('.') and hasattr(self.config, 'PIXEL_SPACE_OUTPUT') and self.config.PIXEL_SPACE_OUTPUT:
                 datetime = time.strftime("%Y%m%d-%H%M%S")
