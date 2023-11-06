@@ -368,8 +368,8 @@ def visualize_prompt(img, prompt):
     """Visualizes the prompt on the image"""
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.7
-    font_color = (0, 0, 0) # color # Change to BLACK!!
-    thickness = 3
+    font_color = (0, 0, 255) # color # Change to BLACK!!
+    thickness = 2
     prompt_str = str(prompt)
     # Determine the size of the text
     text_size, _ = cv2.getTextSize(prompt_str, font, font_scale, thickness)
@@ -377,7 +377,7 @@ def visualize_prompt(img, prompt):
     text_x = 10
     text_y = text_size[1] + 10
     # Add the text to the image
-    # cv2.putText(img, prompt_str, (text_x, text_y), font, font_scale, font_color, thickness)
+    cv2.putText(img, prompt_str, (text_x, text_y), font, font_scale, font_color, thickness)
     return img
 
 

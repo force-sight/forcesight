@@ -13,6 +13,7 @@ from stretch_remote.robot_utils import read_robot_status
 from robot.kdl_client import get_inverse_kinematics
 import random
 from utils.transform import transform_coord, pose_to_mat, mat_to_pose
+from tkinter import Tk, simpledialog, font
 
 ##############################################################################
 
@@ -160,7 +161,18 @@ def keyboard_teleop(rc, deltas, keycode, self=None):  # enable_moving=True, stop
 
     # set the prompt
     if keycode == ord('p') and hasattr(self, 'prompt'):
-        self.prompt = input("Enter new prompt: ")
+        # self.prompt = input("Enter new prompt: ")
+        # Create a Tkinter root widget
+        root = Tk()
+        root.withdraw()  # We don't want a full GUI, so keep the root window from appearing
+
+        # Customize the font size
+        myFont = font.Font(family='Times New Roman', size=20, weight='bold')
+        root.option_add("*Font", myFont)
+
+        # Show an input box and wait for text
+        self.prompt = simpledialog.askstring("Input", "Enter new prompt:")
+
         # self.prompt = self.prompt # NOTE: This might break live model
 
     if keycode == ord('c') and hasattr(self, 'publish_to_rviz'):

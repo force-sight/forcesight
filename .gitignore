@@ -3,16 +3,9 @@ data
 data/
 checkpoints
 checkpoints/
-Azure-Kinect-Sensor-SDK/
-clipseg/
 librealsense/
-owlvit_segment_anything/
-sam/
-scenic/
-segment-anything/
 stretch_remote/
 wandb/
-results/
 videos/
 figures/
 results/

@@ -8,7 +8,7 @@ from utils.data_pipeline import *
 from utils.visualizer import *
 from robot.robot_utils import *
 from recording.ft import FTCapture, MockFTCapture, EEF_PITCH_WEIGHT_OFFSET
-from stretch_remote.robot_utils import keyboard_teleop, get_pos_dict, move_to_target
+# from stretch_remote.robot_utils import get_pos_dict, move_to_target
 from stretch_remote.remote_client import RemoteClient
 from utils.aruco_detect import ArucoPoseEstimator, find_contact_markers
 
@@ -232,14 +232,16 @@ class LiveModel():
 
             if self.args.use_ft:
                 self.curr_force = self.ft.get_ft() - self.ft_offset
-                self.pred_force = t2np(pred["force"])
-                
                 # this applies the offset
                 self.curr_force -= EEF_PITCH_WEIGHT_OFFSET
-                self.pred_force -= EEF_PITCH_WEIGHT_OFFSET[:3]
+            else:
+                self.curr_force = np.zeros(6)
+                
+            self.pred_force = t2np(pred["force"])
+            self.pred_force -= EEF_PITCH_WEIGHT_OFFSET[:3]
 
-                pprint(f'current force: {self.curr_force}')
-                pprint(f'pred final force: {self.pred_force}')
+            pprint(f'current force: {self.curr_force}')
+            pprint(f'pred final force: {self.pred_force}')
             
             ft_origin = (self.curr_left_fingertip + self.curr_right_fingertip) / 2
 
@@ -326,7 +328,9 @@ class LiveModel():
                     viewable_img_noprompt = visualize_forces(viewable_img_noprompt, ft_pred_origin, self.pred_force, color=(0, 255, 255))
                 viewable_depth = cv2.applyColorMap(cv2.convertScaleAbs(self.depth_image, alpha=0.03), cv2.COLORMAP_JET)
 
-            cv2.imshow('rgb', viewable_img_noprompt)
+            # cv2.imshow('rgb', viewable_img_noprompt)
+            viewable_img_prompt = visualize_prompt(viewable_img_noprompt, is_teleop_text + self.prompt_mod)
+            cv2.imshow('rgb', viewable_img_prompt)
                 
             # print('left error (m): ', np.linalg.norm(pred['left_fingertip'].cpu().numpy()[0] - final_left_fingertip.cpu().numpy()))
             # print('right error (m): ', np.linalg.norm(pred['right_fingertip'].cpu().numpy()[0] - final_right_fingertip.cpu().numpy()))
@@ -435,6 +439,10 @@ class LiveModel():
                         else:
                             self.prompt_mod = self.prompt + timestep_to_subgoal_text(self.current_subgoal_idx)
                         print(f"Now to {self.prompt_mod}")
+
+                        if timestep_to_subgoal_text(self.current_subgoal_idx, self.prompt) == ", done":
+                            self.rc.home()
+                            self.teleop_mode = True
 
             # print('left error (m): ', np.linalg.norm(pred['left_fingertip'].cpu().numpy()[0] - final_left_fingertip.cpu().numpy()))
             # print('right error (m): ', np.linalg.norm(pred['right_fingertip'].cpu().numpy()[0] - final_right_fingertip.cpu().numpy()))
