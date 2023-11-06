@@ -118,24 +118,13 @@ class RosVizInterface:
 
         # Publish the transform
         static_broadcaster.sendTransform(transform)
-        
-        # transform.header.frame_id = 'arm'
-        # transform.child_frame_id = self.ref_frame
-        # transform.transform.translation.z = 0.02
 
-        # quaternion = R.from_euler('xyz', [math.pi/5, 0, 0]).as_quat()
-        # transform.transform.rotation.x = quaternion[0]
-        # transform.transform.rotation.y = quaternion[1]
-        # transform.transform.rotation.z = quaternion[2]
-        # transform.transform.rotation.w = quaternion[3]
-
-        # # Publish the transform
-        # static_broadcaster.sendTransform(transform)
 
     def publish_pcd(self, pcd, invert_color=False):
         cloud_msg = convertCloudFromOpen3dToRos(pcd, self.ref_frame, invert_color)
         self.cloud_pub.publish(cloud_msg)
-    
+
+
     def publish_fingertips(self, coors, size=0.005):
         marker = Marker()
         marker.header.frame_id = self.ref_frame
@@ -156,6 +145,7 @@ class RosVizInterface:
             point.z = c[2]
             marker.points.append(point)
         self.fingertips_pub.publish(marker)
+
 
     def publish_wrist_force(self, force_vec, origin, scale=0.05, is_curr=False):
         # Invert the force vector
@@ -214,7 +204,8 @@ class RosVizInterface:
             self.curr_wrist_force_pub.publish(marker)
         else:
             self.wrist_force_pub.publish(marker)
-            
+
+
     def publish_grip_force(self, force_magnitude, origin, force_scale=0.2, sphere_scale=.04):
         marker = Marker()
         marker.header.frame_id = self.ref_frame
@@ -236,7 +227,8 @@ class RosVizInterface:
         color.a = 0.8
         marker.color = color
         self.grip_force_pub.publish(marker)
-        
+
+
     def publish_grip_force_with_fingertips(self,
                                            force_magnitude,
                                            fingertips,
@@ -319,6 +311,7 @@ class RosVizInterface:
             self.curr_grip_force_fingers_pub.publish(markers_msg)
         else:
             self.grip_force_fingers_pub.publish(markers_msg)
+
 
 ##############################################################################
 

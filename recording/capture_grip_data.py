@@ -244,8 +244,10 @@ if __name__ == '__main__':
         data = dc.capture_data()
         delay.append(data['ft_frame_time'] - data['frame_time'])
 
-    folder_sizes = [len(files) for r, d, files in os.walk(os.path.join(dc.data_folder, dc.args.stage, dc.args.folder))][1:]
-    folder_names = [r.split('/')[-1] for r, d, files in os.walk(os.path.join(dc.data_folder, dc.args.stage, dc.args.folder))][1:]
+    folder_sizes = [len(files) for r, d, files in os.walk(
+        os.path.join(dc.data_folder, dc.args.stage, dc.args.folder))][1:]
+    folder_names = [r.split('/')[-1] for r, d, files in os.walk(
+        os.path.join(dc.data_folder, dc.args.stage, dc.args.folder))][1:]
     folder_dict = dict(zip(folder_names, folder_sizes))
     
     print('folder sizes: ', folder_dict)

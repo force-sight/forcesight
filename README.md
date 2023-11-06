@@ -114,9 +114,9 @@ python -m recording.capture_data --config data_collection_5_18 --stage raw --fol
 
 We use a randomizer to change the random val, in `robot/robot_utils.py`, `if keycode == ord('/')`. This speeds up the data collection process.
 
-Data collection for grip data
+Data collection for grip force model
 ```bash
-python3 -m recording.capture_grip_data --bipartite 0 --config grip_force_5_21 --folder grip_force_5_25_frame_0_0 --stage train --ip 100.99.105.59
+python3 -m recording.capture_grip_data --bipartite 0 --config grip_force_dist_pos_effort_5_25 --folder grip_force_5_25_frame_0_0 --stage train --ip 100.99.105.59
 ```
 
 ### Load the new data

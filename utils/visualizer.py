@@ -62,7 +62,6 @@ def visualize_points(img, points, colors=[(0, 100, 255), (0, 255, 100)],
                         cv2.FONT_HERSHEY_SIMPLEX,  # font family
                         0.7,  # font size
                         (255, 200, 0),  # font color
-                        # (0, 200, 255),  # font color
                         2)  # font stroke
         # img = cv2.drawMarker(img, (int(point2d[0]), int(point2d[1])),
         #                      color, markerType=cv2.MARKER_TILTED_CROSS, markerSize=12, thickness=3)
@@ -79,10 +78,13 @@ def visualize_points(img, points, colors=[(0, 100, 255), (0, 255, 100)],
         #             2)  # font stroke
     return img
 
+
 def visualize_forces(img, origin, ft, color=(255, 255, 0), force_scale=2e-2):
-    # ft is a numpy array of shape (6,) in the camera frame
-    # the first three elements are the force vector
-    # we want to draw an arrow at the center of the image
+    """
+    ft is a numpy array of shape (6,) in the camera frame
+    the first three elements are the force vector
+    we want to draw an arrow at the center of the image
+    """
     intr =  Intrinsic640()
     cam_mat = intr.cam_mat()
     cam_dist = intr.cam_dist()
@@ -138,6 +140,7 @@ def visualize_grip_force(img, grip_force, points, color=(0, 255, 0), force_scale
     img = cv2.arrowedLine(img, (int(right_fingertip[0] + force_scale * grip_force), int(right_fingertip[1])),
                           (int(right_fingertip[0] ), int(right_fingertip[1])), color, 4, tipLength=min(tiplength, 1)) # = 0.3)
     return img
+
 
 def visualize_datapoint(
             prompt, initial_data, final_data, config,
@@ -360,6 +363,7 @@ def visualize_datapoint(
     plt.savefig(os.path.join(directory, 'result.png'))
     plt.show()
 
+
 def visualize_prompt(img, prompt):
     """Visualizes the prompt on the image"""
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -375,6 +379,7 @@ def visualize_prompt(img, prompt):
     # Add the text to the image
     # cv2.putText(img, prompt_str, (text_x, text_y), font, font_scale, font_color, thickness)
     return img
+
 
 def alphaMerge(small_foreground, background, top, left):
     """
@@ -407,6 +412,7 @@ def alphaMerge(small_foreground, background, top, left):
     # Replace a part of the background
     result[top:top + height, left:left + width, :] = part_of_bg
     return result
+
 
 def filled_arrowedLine(img, pt1, pt2, color, thickness=1, line_type=8, tipLength=20):
     # Convert points to numpy arrays

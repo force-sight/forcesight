@@ -7,8 +7,10 @@ def calibrate_ft(ft_obj):
     ft = ft_obj.get_ft()
     np.save('ft_calibration.npy', ft)
 
+
 def get_ft_calibration():
     return np.load('ft_calibration.npy')
+
 
 def ft_to_cam_rotation(custom_pitch=(10/90)*math.pi/2):
     """
@@ -20,6 +22,8 @@ def ft_to_cam_rotation(custom_pitch=(10/90)*math.pi/2):
     return np.array([[0, 1, 0],
                      [-1, 0, 0],
                      [0, 0, 1]])@custom_pitch
+
+##############################################################################
 
 if __name__ == '__main__':
     robot = None
