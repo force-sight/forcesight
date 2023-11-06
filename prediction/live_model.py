@@ -232,14 +232,16 @@ class LiveModel():
 
             if self.args.use_ft:
                 self.curr_force = self.ft.get_ft() - self.ft_offset
-                self.pred_force = t2np(pred["force"])
-                
                 # this applies the offset
                 self.curr_force -= EEF_PITCH_WEIGHT_OFFSET
-                self.pred_force -= EEF_PITCH_WEIGHT_OFFSET[:3]
+            else:
+                self.curr_force = np.zeros(6)
+                
+            self.pred_force = t2np(pred["force"])
+            self.pred_force -= EEF_PITCH_WEIGHT_OFFSET[:3]
 
-                pprint(f'current force: {self.curr_force}')
-                pprint(f'pred final force: {self.pred_force}')
+            pprint(f'current force: {self.curr_force}')
+            pprint(f'pred final force: {self.pred_force}')
             
             ft_origin = (self.curr_left_fingertip + self.curr_right_fingertip) / 2
 
