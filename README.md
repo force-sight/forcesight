@@ -161,8 +161,8 @@ python -m robot.visual_servo --config default_config --index 6 --epoch latest --
 
 Test model with live view and visual servoing
 ```bash
-# Visual Servo: Press P to insert prompt,
-# hit key 'T' to switch between view model and visual servoing mode
+# Visual Servo: Press 'p' to insert prompt,
+# Press 't' to switch between view model and visual servoing mode
 # add --ros_viz arg to visualize the 3d scene on rviz
 python -m robot.visual_servo --config default_config --index 0 --epoch best --prompt "pick up the keys" --ip <ROBOT IP>
 ```
